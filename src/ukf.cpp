@@ -119,7 +119,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       double x = meas_package.raw_measurements_(0);
       double y = meas_package.raw_measurements_(1);
 
-      x_ << x, y, 4, 0.5, 0.0;
+      x_ << x, y, 0, 0, 0;
 
     }
 
@@ -129,6 +129,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   }
 
   double dt = (meas_package.timestamp_ - time_us_) / 1000000.0;
+  time_us_ = meas_package.timestamp_;
 
   Prediction(dt);
 
