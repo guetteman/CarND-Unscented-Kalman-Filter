@@ -59,6 +59,12 @@ UKF::UKF() {
   //set augmented dimension
   int n_aug = 7;
 
+  // the current NIS for radar
+  NIS_radar_ = 0.0;
+
+  // the current NIS for laser
+  NIS_laser_ = 0.0;
+
 }
 
 UKF::~UKF() {}
@@ -378,10 +384,12 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
   while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
 
+  //calculate NIS
+  NIS_laser_ = z_diff.transpose() * S.inverse() * z_diff;
+
   //update state mean and covariance matrix
   x_ = x_ + K * z_diff;
   P_ = P_ - K*S*K.transpose();
-
 }
 
 /**
@@ -489,6 +497,10 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   //angle normalization
   while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
   while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
+
+  //calculate NIS
+  NIS_radar_ = z_diff.transpose() * S.inverse() * z_diff;
+
 
   //update state mean and covariance matrix
   x_ = x_ + K * z_diff;
