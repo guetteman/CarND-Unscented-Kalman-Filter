@@ -47,13 +47,11 @@ UKF::UKF() {
   std_radrd_ = 0.3;
   //DO NOT MODIFY measurement noise values above these are provided by the sensor manufacturer.
   
-  /**
-  TODO:
-
-  Complete the initialization. See ukf.h for other member properties.
-
-  Hint: one or more values initialized above might be wildly off...
-  */
+  P_ << 1, 0, 0, 0, 0,
+        0, 1, 0, 0, 0,
+        0, 0, 1, 0, 0,
+        0, 0, 0, 1, 0,
+        0, 0, 0, 0, 1;
 }
 
 UKF::~UKF() {}
@@ -63,12 +61,51 @@ UKF::~UKF() {}
  * either radar or laser.
  */
 void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
-  /**
-  TODO:
+  
+  // Initialzation
+  if (!is_initialized_) {
 
-  Complete this function! Make sure you switch between lidar and radar
-  measurements.
-  */
+    float x = 0.0;
+    float y = 0.0;
+
+    if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
+      /**
+      Convert radar from polar to cartesian coordinates and initialize state.
+      */
+
+      double rho = meas_package.raw_measurements_(0);
+      double theta = meas_package.raw_measurements_(1);
+      double rho_dot = meas_package.raw_measurements_(2);
+
+      x = rho * cos(theta);
+      y = rho * sin(theta);
+
+      double vx = rho_dot * cos(theta);
+      double vy = rho_dot * sin(theta);
+
+      double v = sqrt(vx * vx + vy * vy);
+
+      x_ << x, y, v, 0, 0;
+
+    } else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
+      /**
+      Initialize state.
+      */
+
+      double x = meas_package.raw_measurements_(0);
+      double y = meas_package.raw_measurements_(1);
+
+      x_ << x, y, 0, 0;
+
+    }
+
+    is_initialized_ = true;
+    time_us_ = meas_package.timestamp_;
+    return;
+  }
+
+  
+
 }
 
 /**
