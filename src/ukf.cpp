@@ -104,7 +104,19 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     return;
   }
 
-  
+  double dt = (meas_package.timestamp_ - time_us_) / 1000000.0;
+
+  Prediction(dt);
+
+  if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
+
+    UpdateRadar(meas_package);
+
+  } else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
+
+    UpdateLidar(meas_package);
+
+  }
 
 }
 
