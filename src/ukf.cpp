@@ -25,10 +25,10 @@ UKF::UKF() {
   P_ = MatrixXd(5, 5);
 
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 30;
+  std_a_ = 1.5;
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 30;
+  std_yawdd_ = 0.5;
   
   //DO NOT MODIFY measurement noise values below these are provided by the sensor manufacturer.
   // Laser measurement noise standard deviation position1 in m
@@ -56,8 +56,19 @@ UKF::UKF() {
   // Set state dimension
   n_x_ = 5;
 
-  //set augmented dimension
-  int n_aug = 7;
+  // Set augmented dimension
+  n_aug_ = 7;
+
+  lambda_ = 0.0;
+
+  // Matrix to hold sigma points
+  Xsig_pred_ = MatrixXd(n_x_, 2 * n_aug_ + 1);
+
+  // Vector for weights
+  weights_ = VectorXd(2*n_aug_+1);
+  
+  // Start time
+  time_us_ = 0;
 
   // the current NIS for radar
   NIS_radar_ = 0.0;
@@ -98,7 +109,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
       double v = sqrt(vx * vx + vy * vy);
 
-      x_ << x, y, v, 0, 0;
+      x_ << x, y, v, rho_dot * cos(theta), rho_dot * sin(theta);
 
     } else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
       /**
@@ -108,7 +119,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       double x = meas_package.raw_measurements_(0);
       double y = meas_package.raw_measurements_(1);
 
-      x_ << x, y, 0, 0;
+      x_ << x, y, 4, 0.5, 0.0;
 
     }
 
@@ -342,7 +353,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 
   //add measurement noise covariance matrix
   R <<    std_laspx_*std_laspx_, 0,
-          0, std_laspy_*std_laspy_,
+          0, std_laspy_*std_laspy_;
   S = S + R;
 
   //vector for incoming radar measurement
